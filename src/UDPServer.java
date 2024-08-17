@@ -24,7 +24,7 @@ public class UDPServer {
             int port = receivePacket.getPort();
 
             if (PlayerMessage.CONNECT.name().equals(sentence)) {
-                System.out.println("Connection request received from ip: " + ipAddress + " port: " + port);
+                System.out.println("Requisição de conexão recebida do IP: " + ipAddress + " porta: " + port);
                 playersConnected.put(ipAddress.toString() + port, new Player(ipAddress, port));
                 
                 System.out.println(playersConnected.size());
@@ -34,7 +34,7 @@ public class UDPServer {
                 }
             } else if (PlayerMessage.READY.name().equals(sentence)) {
                 playersConnected.get(ipAddress.toString() + port).ready();
-                System.out.println("Player with IP " + ipAddress + " marked as ready");
+                System.out.println("Jogador com IP " + ipAddress + " marcado como pronto");
 
                 if (playersConnected.size() == 2 && playersConnected.values().stream().allMatch(Player::isReady)) {
                     String encodedWord = "Palavra: " + hm.getEncodedWord() + "\n" + "Chute uma letra: ";
