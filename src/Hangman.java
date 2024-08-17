@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Hangman {
-	private int remainingTries;
+	int remainingTries;
 	private int tries = 6;
 	private List<String> words = Arrays.asList("gato", "cachorro", "pato", "carro", "navio");
-	private String word;
+	public String word;
 	private String encodedWord;
 	private HashSet<Character> guessedLetters = new HashSet<Character>();
 	private HashSet<Character> wordLetters = new HashSet<Character>();
