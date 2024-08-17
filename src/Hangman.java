@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Hangman {
-	int remainingTries;
 	private int tries = 6;
 	private List<String> words = Arrays.asList("gato", "cachorro", "pato", "carro", "navio");
 	public String word;
@@ -49,7 +48,7 @@ public class Hangman {
 		this.computeEncodedWord();
 		
 		if(!wordLetters.contains(letter)) {
-			--this.remainingTries;
+			--this.tries;
 		}
 	}
 	
@@ -58,7 +57,7 @@ public class Hangman {
 	}
 	
 	public boolean lost() {
-		return this.remainingTries <= 0;
+		return this.tries <= 0;
 	}
 	
 	public String getEncodedWord() {

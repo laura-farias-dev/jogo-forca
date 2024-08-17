@@ -1,60 +1,63 @@
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class UDPClient {
+	
+	private DatagramSocket socket;
+	private InetAddress address;
+	private int port;
 
-    public static void main(String args[]) throws Exception {
+    public UDPClient(String address, int port) throws IOException {
+        this.address = InetAddress.getByName(address);
+        this.port = port;
+        this.socket = new DatagramSocket();
+    }
+    
+    public void sendMessage(String message) throws IOException {
+        byte[] buffer = message.getBytes();
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
+        socket.send(packet);
+    }
 
-        BufferedReader keyboardReader = new BufferedReader(new InputStreamReader(System.in));
+    public String receiveMessage() throws IOException {
+        byte[] buffer = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        socket.receive(packet);
+        return new String(packet.getData(), 0, packet.getLength());
+    }
 
-        DatagramSocket clientSocket = new DatagramSocket();
+    public static void main(String[] args) throws IOException {
+        UDPClient client = new UDPClient("localhost", 9881);
+        
+        client.sendMessage(PlayerMessage.CONNECT.name());
 
-        InetAddress ipAddress = InetAddress.getByName("localhost");
-        int port = 9881;
-
-        System.out.println("Connecting...");
-
-        byte[] sendConnect = PlayerMessage.CONNECT.name().getBytes();
-        DatagramPacket sendPacket = new DatagramPacket(sendConnect, sendConnect.length, ipAddress, port);
-
-        clientSocket.send(sendPacket);
-
-        System.out.println("Digite a ação desejada: ");
-        System.out.println("1 - Pronto para partida");
-
-        String userAction = keyboardReader.readLine();
-
-        if (userAction.equals("1")) {
-            byte[] readyMessage = PlayerMessage.READY.name().getBytes();
-            DatagramPacket readyPacket = new DatagramPacket(readyMessage, readyMessage.length, ipAddress, port);
-
-            clientSocket.send(readyPacket);
-        }
-
-        while (true) {
-            byte[] receivedData = new byte[1024];
-            DatagramPacket receivePacket = new DatagramPacket(receivedData, receivedData.length);
-
-            clientSocket.receive(receivePacket);
-
-            String serverResponse = new String(receivePacket.getData(), 0, receivePacket.getLength());
-            System.out.println("FROM SERVER: " + serverResponse);
-
-            if (serverResponse.contains("você venceu") || serverResponse.contains("você perdeu")) {
-                break; // 
+        Thread sendThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+                String message;
+                while ((message = reader.readLine()) != null) {
+                    client.sendMessage(message);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        });
 
-            System.out.println("Adivinhe uma letra: ");
-            String guessedLetter = keyboardReader.readLine();
+        Thread receiveThread = new Thread(() -> {
+            while (true) {
+                try {
+                    String receivedMessage = client.receiveMessage();
+                    System.out.println("FROM SERVER: " + receivedMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
-            byte[] guessedLetterData = guessedLetter.getBytes();
-            DatagramPacket guessedLetterPacket = new DatagramPacket(guessedLetterData, guessedLetterData.length, ipAddress, port);
-            clientSocket.send(guessedLetterPacket);
-        }
-
-        clientSocket.close(); 
+        sendThread.start();
+        receiveThread.start();
     }
 }
