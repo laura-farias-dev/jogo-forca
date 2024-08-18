@@ -50,7 +50,7 @@ public class UDPClient {
             while (true) {
                 try {
                     String receivedMessage = client.receiveMessage();
-                    System.out.println("FROM SERVER: " + receivedMessage);
+                    System.out.println(receivedMessage);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

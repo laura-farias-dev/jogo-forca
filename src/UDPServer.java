@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class UDPServer {
-
     public static void main(String args[]) throws Exception {
         DatagramSocket serverSocket = new DatagramSocket(9881);
         System.out.println("UDP server rodando!");
@@ -22,18 +21,23 @@ public class UDPServer {
             String sentence = new String(receivePacket.getData()).trim();
             InetAddress ipAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
+            
+            String playerKey = ipAddress.toString() + port;
 
             if (PlayerMessage.CONNECT.name().equals(sentence)) {
                 System.out.println("Requisição de conexão recebida do IP: " + ipAddress + " porta: " + port);
-                playersConnected.put(ipAddress.toString() + port, new Player(ipAddress, port));
+                Player newPlayer = new Player(ipAddress, port);
+                playersConnected.put(playerKey, newPlayer);
                 
-                System.out.println(playersConnected.size());
+                String readyMessage = "Digite READY para ficar pronto para a partida";
+                DatagramPacket readyMessagePacket = new DatagramPacket(readyMessage.getBytes(), readyMessage.length(), newPlayer.ipAddress, newPlayer.port);
+                serverSocket.send(readyMessagePacket);
 
                 if (playersConnected.size() == 2) {
                     System.out.println("Dois jogadores conectados. Esperando que eles estejam prontos...");
                 }
             } else if (PlayerMessage.READY.name().equals(sentence)) {
-                playersConnected.get(ipAddress.toString() + port).ready();
+                playersConnected.get(playerKey).ready();
                 System.out.println("Jogador com IP " + ipAddress + " marcado como pronto");
 
                 if (playersConnected.size() == 2 && playersConnected.values().stream().allMatch(Player::isReady)) {
@@ -46,9 +50,10 @@ public class UDPServer {
                         serverSocket.send(sendPacket);
                     }
                 } else {
-                    System.out.println("Aguardando todos os jogadores estarem prontos...");
+                	String waitingPlayers = "Aguardando todos os jogadores estarem prontos...";
+                    System.out.println(waitingPlayers);
                 }
-            } else {
+            } else if(playersConnected.size() == 2 && playersConnected.values().stream().allMatch(Player::isReady)) {
                 String guessedLetter = sentence.toLowerCase();
                 hm.guess(guessedLetter);
 
@@ -61,7 +66,7 @@ public class UDPServer {
                 }
 
                 if (hm.won()) {
-                    String winMessage = "Você venceu! A palavra era: " + hm.word;
+                    String winMessage = "Você venceu! A palavra era: " + hm.getWord();
                     for (Player player : playersConnected.values()) {
                         byte[] sendData = winMessage.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, player.ipAddress, player.port);
@@ -69,7 +74,7 @@ public class UDPServer {
                     }
                     break; 
                 } else if (hm.lost()) {
-                    String loseMessage = "Você perdeu! A palavra era: " + hm.word;
+                    String loseMessage = "Você perdeu! A palavra era: " + hm.getWord();
                     for (Player player : playersConnected.values()) {
                         byte[] sendData = loseMessage.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, player.ipAddress, player.port);

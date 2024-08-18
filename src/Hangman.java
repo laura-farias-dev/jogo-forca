@@ -10,10 +10,11 @@ import java.util.stream.Collectors;
 public class Hangman {
 	private int tries = 6;
 	private List<String> words = Arrays.asList("gato", "cachorro", "pato", "carro", "navio");
-	public String word;
+	private String word;
 	private String encodedWord;
 	private HashSet<Character> guessedLetters = new HashSet<Character>();
 	private HashSet<Character> wordLetters = new HashSet<Character>();
+	
 	
 	public Hangman() {
 		this.word = this.drawWord();
@@ -62,5 +63,9 @@ public class Hangman {
 	
 	public String getEncodedWord() {
 		return this.encodedWord;
+	}
+	
+	public String getWord() {
+		return this.word;
 	}
 }
